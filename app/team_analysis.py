@@ -4,6 +4,7 @@ from collections import Counter
 from config import settings
 
 except_messgs = {}
+pred_count = {}
 
 def teamdata_extract():
     '''Extracting the data from the database to load into the dataframe for analysis.'''
@@ -716,6 +717,10 @@ def team_analysis_flow(today, tomorrow):
             filtered_dataset[column] = filtered_dataset[column].apply(json.dumps)
     except Exception as e:
         except_messgs[f"(Datatype Transformation)"] = f"{type(e).__name__}: {e}" #Catches and Records Error
+    
+    pred_diction = dict(Counter(list(filtered_dataset['league'])))
+    for key in list(pred_diction.keys()):
+        pred_count[key] = pred_diction[key]
     
     try:
         teamdata_loader(filtered_dataset)

@@ -1,9 +1,11 @@
 import pandas as pd
 import json
 from datetime import date, timedelta
-from team_analysis import team_analysis_flow, except_messgs
+from team_analysis import team_analysis_flow, except_messgs, pred_count
 from ref_analysis import ref_analysis_flow, refexcept_messgs
-
+from config import settings
+import smtplib
+from email.message import EmailMessage
 
 def main():
     today = date.today()
@@ -13,10 +15,52 @@ def main():
     if (today.day % 2) == 1:
         team_analysis_flow(today, tomorrow)
         ref_analysis_flow(today, tomorrow)
-        for key in except_messgs.keys():
-            print(f"{key}: {except_messgs[key]}")
-        for key in refexcept_messgs.keys():
-            print(f"{key}: {refexcept_messgs[key]}")
+        #for key in except_messgs.keys():
+            #print(f"{key}: {except_messgs[key]}")
+        #for key in refexcept_messgs.keys():
+            #print(f"{key}: {refexcept_messgs[key]}")
+
+        #Concatenating error logs to send to email.
+        email_1 = f"Error Logs for {today} and {tomorrow} Analysis.\n\n"
+        email_1 = email_1 + f"Teams' Analysis\n"
+        for item in list(except_messgs.keys()):
+            if item == list(except_messgs.keys())[-1]:
+                email_1 = email_1 + f"{item}: {except_messgs[item]}\n\n"
+            else:
+                email_1 = email_1 + f"{item}: {except_messgs[item]}\n"
+        email_1 = email_1 + f"Referee's Analysis\n"
+        for item in list(refexcept_messgs.keys()):
+            if item == list(refexcept_messgs.keys())[-1]:
+                email_1 = email_1 + f"{item}: {refexcept_messgs[item]}\n\n"
+            else:
+                email_1 = email_1 + f"{item}: {refexcept_messgs[item]}\n"
+        
+        #Sends error message to Email for recording or review
+        msg_1 = EmailMessage()
+        msg_1['Subject'] = f"Error Logs for {today} and {tomorrow} Analysis."
+        msg_1['From'] = settings.email_address
+        msg_1['To'] = "michaeligbomezie@gmail.com"
+        msg_1.set_content(email_1)
+
+        #Concatenating the prediction for client's update.
+        email_2 = f"Predictions per League for {today} and {tomorrow}.\n\n"
+        for item in list(pred_count.keys()):
+            if item == list(pred_count.keys())[-1]:
+                email_2 = email_2 + f"{item}: {pred_count[item]}\n\n"
+            else:
+                email_2 = email_2 + f"{item}: {pred_count[item]}\n"
+        
+        #Sends error message to Email for recording or review
+        msg_2 = EmailMessage()
+        msg_2['Subject'] = f"Predictions per League for {today} and {tomorrow}."
+        msg_2['From'] = settings.email_address
+        msg_2['To'] = "michaeligbomezie@gmail.com"
+        msg_2.set_content(email_2)
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(settings.email_address, settings.email_password)
+            smtp.send_message(msg_1)
+            smtp.send_message(msg_2)
 
 
 if __name__ == '__main__':
