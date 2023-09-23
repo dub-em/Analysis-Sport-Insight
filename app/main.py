@@ -1,5 +1,3 @@
-import pandas as pd
-import json
 from datetime import date, timedelta
 from team_analysis import team_analysis_flow, except_messgs, pred_count
 from ref_analysis import ref_analysis_flow, refexcept_messgs
@@ -8,6 +6,11 @@ import smtplib
 from email.message import EmailMessage
 
 def main():
+    '''Main function the runs the entire app workflow, from extraction of the individual team's
+    match history to the referee's history from the database to analysing this data and making
+    predictions. These predictions are then filtered and loaded into the database for viewing.
+    
+    It also records the error log and predictions and sends it to the dev's/client's email'''
     today = date.today()
     tomorrow = date.today() + timedelta(days=1)
     print(today, tomorrow)
