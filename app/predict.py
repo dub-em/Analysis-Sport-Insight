@@ -15,7 +15,7 @@ def main():
     tomorrow = date.today() + timedelta(days=1)
     print(today, tomorrow)
 
-    if (today.day % 2) == 1:
+    if (today.day % 2) == 0:
         team_analysis_flow(today, tomorrow)
         ref_analysis_flow(today, tomorrow)
         #for key in except_messgs.keys():
