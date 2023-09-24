@@ -1,1 +1,1 @@
-web: python app/predict.py  --workers 1
+worker: python app/predict.py

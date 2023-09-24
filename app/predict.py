@@ -18,10 +18,6 @@ def main():
     if (today.day % 2) == 0:
         team_analysis_flow(today, tomorrow)
         ref_analysis_flow(today, tomorrow)
-        #for key in except_messgs.keys():
-            #print(f"{key}: {except_messgs[key]}")
-        #for key in refexcept_messgs.keys():
-            #print(f"{key}: {refexcept_messgs[key]}")
 
         #Concatenating error logs to send to email.
         email_1 = f"Error Logs for {today} and {tomorrow} Analysis.\n\n"
