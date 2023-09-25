@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from team_analysis import team_analysis_flow, except_messgs, pred_count
 from ref_analysis import ref_analysis_flow, refexcept_messgs
 from config import settings
-import smtplib
+import smtplib, os
 from email.message import EmailMessage
 
 def main():
@@ -63,4 +63,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    dyno_type = os.environ.get("DYNO")
+    print(dyno_type)
+    if ('run' in dyno_type) | ('scheduler' in dyno_type):
+        main()
