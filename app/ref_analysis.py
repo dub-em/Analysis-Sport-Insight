@@ -1,5 +1,6 @@
 import pandas as pd
 import psycopg2, json
+from sqlalchemy import create_engine
 from config import settings
 
 refexcept_messgs = {}
@@ -26,9 +27,10 @@ def refdata_extract():
 
     # Fetch all rows
     rows = cursor.fetchall()
+    column_names = [desc[0] for desc in cursor.description]
 
     #Converting the data extracted to a DataFrame for analysis
-    df_ref = pd.DataFrame(rows, columns=['date', 'time', 'hometeam', 'awayteam', 'result', 'matchlink', 'league', 'refereelink', 'referee_matchistlink', 'referee_matchhistdetails'])
+    df_ref = pd.DataFrame(rows, columns=column_names)
     df_ref
 
     #Commit and close connection
@@ -143,11 +145,6 @@ def ref_total_analysis(dataset):
 
 def refdata_loader(ref_modified_dataset):
     '''Extracting the data from the dataframe to load into the database multiple rows at a time'''
-    lim = ref_modified_dataset.shape[0]
-
-    ref_data = []
-    for i in range(lim):
-        ref_data.append(ref_modified_dataset.iloc[i,:])
 
     #PostgreSQL database connection parameters
     connection_params = {
@@ -178,10 +175,12 @@ def refdata_loader(ref_modified_dataset):
         
     );'''
     cursor.execute(create_query)
+    connection.commit()
 
-    #Insert all the data into the table multiple rows at a time
-    insert_query = "INSERT INTO ref_match_pred (date, time, hometeam, awayteam, result, matchlink, league, refereelink, referee_matchistlink, referee_matchhistdetails, ref_patterns) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-    cursor.executemany(insert_query, ref_data)
+    # Create a SQLAlchemy engine
+    engine = create_engine(f'postgresql+psycopg2://{settings.database_user}:{settings.database_password}@{settings.database_hostname}/{settings.database_name}')
+
+    ref_modified_dataset.to_sql('ref_match_pred', engine, if_exists='append', index=False)
 
     #Commit and close connection
     connection.commit()

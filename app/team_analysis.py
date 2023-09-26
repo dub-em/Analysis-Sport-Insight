@@ -1,5 +1,6 @@
 import pandas as pd
 import psycopg2, json
+from sqlalchemy import create_engine
 from collections import Counter
 from config import settings
 
@@ -28,9 +29,10 @@ def teamdata_extract():
 
     # Fetch all rows
     rows = cursor.fetchall()
+    column_names = [desc[0] for desc in cursor.description]
 
     #Converting the data extracted to a DataFrame for analysis
-    df = pd.DataFrame(rows, columns=['date', 'hometeam', 'awayteam', 'match_urls', 'home_urls', 'away_urls', 'league', 'home_team_matches', 'away_team_matches', 'head2head_matches', 'home_team_matchespattern', 'away_team_matchespattern'])
+    df = pd.DataFrame(rows, columns=column_names)
     df
 
     #Commit and close connection
@@ -69,7 +71,7 @@ def indiv_teamrole_analysis(team_matches, team_name, role):
         else:
             third_recentscore = []
             
-    def check(dataframe, column1, column2):
+    def check(team_df, column1, column2):
         varb = list((team_df[team_df[column1] == team_name])[column2])[:3] #Filter by a given team in a given role
         if len(varb) <= 1: #Checks if there's enough data to check for a pattern
             return ['-']
@@ -623,11 +625,6 @@ def filter_pred(dataset):
 
 def teamdata_loader(dataset):
     '''Extracting the data from the dataframe to load into the database multiple rows at a time'''
-    lim = dataset.shape[0]
-
-    match_pred = []
-    for i in range(lim):
-        match_pred.append(dataset.iloc[i,:])
 
     #PostgreSQL database connection parameters
     connection_params = {
@@ -662,10 +659,12 @@ def teamdata_loader(dataset):
         innerdetail_analysis JSONB
     );'''
     cursor.execute(create_query)
+    connection.commit()
 
-    #Insert all the data into the table multiple rows at a time
-    insert_query = "INSERT INTO match_prediction (date, hometeam, awayteam, match_urls, home_urls, away_urls, league, home_team_matches, away_team_matches, head2head_matches, home_team_matchespattern, away_team_matchespattern, home_score_patterns, away_score_patterns, h2h_score_patterns, innerdetail_analysis) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-    cursor.executemany(insert_query, match_pred)
+    # Create a SQLAlchemy engine
+    engine = create_engine(f'postgresql+psycopg2://{settings.database_user}:{settings.database_password}@{settings.database_hostname}/{settings.database_name}')
+
+    dataset.to_sql('match_prediction', engine, if_exists='append', index=False)
 
     #Commit and close connection
     connection.commit()
