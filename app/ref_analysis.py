@@ -120,6 +120,8 @@ def ref_total_analysis(dataset):
             ref_hist = ref_hist[~ref_hist['home_club_goal'].str.contains('pso')]
             ref_hist = ref_hist[~ref_hist['away_club_goal'].str.contains('aet')]
             ref_hist = ref_hist[~ref_hist['home_club_goal'].str.contains('aet')]
+            ref_hist = ref_hist[~ref_hist['away_club_goal'].str.contains('dec')]
+            ref_hist = ref_hist[~ref_hist['home_club_goal'].str.contains('dec')]
             ref_hist.sort_values(by='Date', ascending=False, inplace=True)
             ref_hist.reset_index(inplace=True)
             
