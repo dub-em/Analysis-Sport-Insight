@@ -3,6 +3,7 @@ import psycopg2, json
 from sqlalchemy import create_engine
 from collections import Counter
 from config import settings
+from var import leagues_abbrv
 
 except_messgs = {}
 pred_count = {}
@@ -43,7 +44,7 @@ def teamdata_extract():
     return df
 
 
-def indiv_teamrole_analysis(team_matches, team_name, role):
+def indiv_teamrole_analysis(team_matches, team_name, role, skip=False, by_league=None):
     '''This function filters the table by only matches played by the team under analysis where the said
     team played the role they will play in their upcoming match'''
     
@@ -59,6 +60,24 @@ def indiv_teamrole_analysis(team_matches, team_name, role):
         end_string = 'Score prediction for {} team using {} historic match scores, for only matches where {} team played {} role: '.format(role, role, role, role)
     else:
         end_string = 'Score prediction for both teams using head-to-head historic match scores, for only matches where they played the same role as their upcoming game: '
+    
+    if by_league != None:
+        team_df = team_df[team_df['league'] == by_league[1]]
+        
+        if num_of_club > 2:
+            end_string = 'Score prediction for {} team using {} historic match scores filtered by {}, for only matches where {} team played {} role: '.format(role, role, by_league[0], role, role)
+        else:
+            end_string = 'Score prediction for both team using head-to-head historic match scores filtered by {}, for only matches where they played the same role as their upcoming game: '.format(by_league[0])
+    
+    if skip == True:
+        for i in range(team_df.shape[0]):
+            if (i%2) == 0:
+                team_df.drop(i, inplace=True)
+                
+        if num_of_club > 2:
+            end_string = 'Score prediction for {} team using {} historic match scores after skipping rows, for only matches where {} team played {} role: '.format(role, role, role, role)
+        else:
+            end_string = 'Score prediction for both team using head-to-head historic match scores after skipping rows, for only matches where they played the same role as their upcoming game: '
     
     if role == 'home':
         if len(list(team_df[team_df['home_club']==team_name])) > 2:
@@ -117,7 +136,7 @@ def indiv_teamrole_analysis(team_matches, team_name, role):
     return final_output
 
 
-def indiv_role_analysis(team_matches, role, skip=False):
+def indiv_role_analysis(team_matches, role, skip=False, by_league=None):
     '''This function analyses the table without any filters and simple checks for pattern for a given
     role (home or away). The historic matches of the team to play the given role in the upcoming match is
     analysed for the given role'''
@@ -134,6 +153,14 @@ def indiv_role_analysis(team_matches, role, skip=False):
         end_string = 'Score prediction for {} role using {} historic match scores, regardless of role played by {} team: '.format(role, role, role)
     else:
         end_string = 'Score prediction for both roles using head-to-head historic match scores, regardless of role played by both teams: '
+    
+    if by_league != None:
+        team_df = team_df[team_df['league'] == by_league[1]]
+        
+        if num_of_club > 2:
+            end_string = 'Score prediction for {} role using {} historic match scores filtered by {}, regardless of role played by {} team: '.format(role, role, by_league[0], role)
+        else:
+            end_string = 'Score prediction for both roles using head-to-head historic match scores filtered by {}, regardless of role played by both teams: '.format(by_league[0])
     
     if skip == True:
         for i in range(team_df.shape[0]):
@@ -190,7 +217,7 @@ def indiv_role_analysis(team_matches, role, skip=False):
     return final_output
 
 
-def indiv_team_analysis(team_matches, team_name, role, skip=False):
+def indiv_team_analysis(team_matches, team_name, role, skip=False, by_league=None):
     '''This function analyses a given team regardless of which role they played in their historic matches.
     It simply checks how they performed against any opponent and if there are any underlying patterns'''
     
@@ -206,6 +233,14 @@ def indiv_team_analysis(team_matches, team_name, role, skip=False):
         end_string = 'Score prediction for {} team using {} historic match scores, regardless of role played by {} team: '.format(role, role, role)
     else:
         end_string = 'Score prediction for both teams using head-to-head historic match scores, regardless of role played by both teams: '
+    
+    if by_league != None:
+        team_df = team_df[team_df['league'] == by_league[1]]
+        
+        if num_of_club > 2:
+            end_string = 'Score prediction for {} team using {} historic match scores filtered by {}, regardless of role played by {} team: '.format(role, role, by_league[0], role)
+        else:
+            end_string = 'Score prediction for both teams using head-to-head historic match scores filtered by {}, regardless of role played by both teams: '.format(by_league[0])
     
     if skip == True:
         for i in range(team_df.shape[0]):
@@ -502,7 +537,7 @@ def final_innerdet(innerdetail_df):
     return final_df
 
 
-def matchscore_total_analysis(dataset):
+def matchscore_total_analysis(dataset, leagues_abbrv):
     '''This function takes in an entire row of the dataset pulled from the database and 
     extracts all the observed pattern from the historic match scores, as well as al the details
     from the inner match details of the historic matches for the home and awar team and their
@@ -526,6 +561,18 @@ def matchscore_total_analysis(dataset):
                 except_messgs[f"indiv_teamrole_analysis: {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
                 list_of_pattern = list_of_pattern + []
             try:
+                patterns = indiv_teamrole_analysis(row[number], row[diction[str(number)][0]], diction[str(number)][1], skip=True)
+                list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
+            except Exception as e:
+                except_messgs[f"indiv_teamrole_analysis (skip): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
+                list_of_pattern = list_of_pattern + []
+            try:
+                patterns = indiv_teamrole_analysis(row[number], row[diction[str(number)][0]], diction[str(number)][1], by_league=[row[6],leagues_abbrv[row[6]]])
+                list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
+            except Exception as e:
+                except_messgs[f"indiv_teamrole_analysis (by league): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
+                list_of_pattern = list_of_pattern + []
+            try:
                 patterns = indiv_role_analysis(row[number], diction[str(number)][1])
                 list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
             except Exception as e:
@@ -538,6 +585,12 @@ def matchscore_total_analysis(dataset):
                 except_messgs[f"indiv_role_analysis (skip): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
                 list_of_pattern = list_of_pattern + []
             try:
+                patterns = indiv_role_analysis(row[number], diction[str(number)][1], by_league=[row[6],leagues_abbrv[row[6]]])
+                list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
+            except Exception as e:
+                except_messgs[f"indiv_role_analysis (by league): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
+                list_of_pattern = list_of_pattern + []
+            try:
                 patterns = indiv_team_analysis(row[number], row[diction[str(number)][0]], diction[str(number)][1])
                 list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
             except Exception as e:
@@ -548,6 +601,12 @@ def matchscore_total_analysis(dataset):
                 list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
             except Exception as e:
                 except_messgs[f"indiv_team_analysis (skip): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
+                list_of_pattern = list_of_pattern + []
+            try:
+                patterns = indiv_team_analysis(row[number], row[diction[str(number)][0]], by_league=[row[6],leagues_abbrv[row[6]]])
+                list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
+            except Exception as e:
+                except_messgs[f"indiv_team_analysis (by league): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
                 list_of_pattern = list_of_pattern + []
             try:
                 patterns = windrawloss_analysis(row[number], row[diction[str(number)][0]], diction[str(number)][1])
@@ -601,9 +660,9 @@ def filter_pred(dataset):
                     score = score.replace(' ','')
                     score = score.split('-')
                     score = [int(elem) for elem in score]
-                    if sum(score) > 2: #Checks the first condition to see if the patterns are interesting
+                    if sum(score) >= 2: #Checks the first condition to see if the patterns are interesting
                         count_2 += 1
-                    if (score[0] > 1) & (score[1] > 1): #checks the second condition for interesting patterns only
+                    if (score[0] >= 1) & (score[1] >= 1): #checks the second condition for interesting patterns only
                         count_3 += 1
                     count_1 += 1
                     
@@ -691,7 +750,7 @@ def team_analysis_flow(today, tomorrow):
     
     try:
         #Analyses the dataset and generates the predictions
-        additional_columns = matchscore_total_analysis(today_df)
+        additional_columns = matchscore_total_analysis(today_df, leagues_abbrv)
     except Exception as e:
         except_messgs[f"(Data Analysis)"] = f"{type(e).__name__}: {e}" #Catches and Records Error
     
