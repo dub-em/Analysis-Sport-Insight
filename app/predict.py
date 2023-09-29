@@ -63,7 +63,8 @@ def main():
 
 
 if __name__ == '__main__':
-    dyno_type = os.environ.get("DYNO")
-    print(dyno_type)
-    if ('run' in dyno_type) | ('scheduler' in dyno_type):
-        main()
+    main()
+    # dyno_type = os.environ.get("DYNO")
+    # print(dyno_type)
+    # if ('run' in dyno_type) | ('scheduler' in dyno_type):
+    #     main()

@@ -111,35 +111,39 @@ def ref_total_analysis(dataset):
     for i in range(dataset.shape[0]):
         ref_row = list(dataset.iloc[i,:])
         
-        ref_hist = pd.DataFrame(ref_row[9])
-        ref_hist['Date'] = pd.to_datetime(ref_hist['Date'], format='%d/%m/%Y')
-        ref_hist[['home_club_goal', 'away_club_goal']] = ref_hist['Score'].str.split(':', n=1, expand=True)
-        ref_hist = ref_hist[~ref_hist['away_club_goal'].str.contains('pso')]
-        ref_hist = ref_hist[~ref_hist['home_club_goal'].str.contains('pso')]
-        ref_hist = ref_hist[~ref_hist['away_club_goal'].str.contains('aet')]
-        ref_hist = ref_hist[~ref_hist['home_club_goal'].str.contains('aet')]
-        ref_hist.sort_values(by='Date', ascending=False, inplace=True)
-        ref_hist.reset_index(inplace=True)
-        
-        dict_of_pattern = {}
-        list_of_pattern = []
-        try:
-            patterns = ref_hist_analysis(ref_hist)
-            list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
-        except Exception as e:
-            refexcept_messgs[f"ref_hist_analysis: {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
-            list_of_pattern = list_of_pattern + []
-        try:
-            patterns = ref_hist_analysis(ref_hist, skip=True)
-            list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
-        except Exception as e:
-            refexcept_messgs[f"ref_hist_analysis (skip): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
-            list_of_pattern = list_of_pattern + []
-        
-        for i in range(len(list_of_pattern)):
-            dict_of_pattern[str(i)] = list_of_pattern[i]
+        if ref_row[9] != {}:
+            ref_hist = pd.DataFrame(ref_row[9])
+            #print(list(ref_hist.columns))
+            ref_hist['Date'] = pd.to_datetime(ref_hist['Date'], format='%d/%m/%Y')
+            ref_hist[['home_club_goal', 'away_club_goal']] = ref_hist['Score'].str.split(':', n=1, expand=True)
+            ref_hist = ref_hist[~ref_hist['away_club_goal'].str.contains('pso')]
+            ref_hist = ref_hist[~ref_hist['home_club_goal'].str.contains('pso')]
+            ref_hist = ref_hist[~ref_hist['away_club_goal'].str.contains('aet')]
+            ref_hist = ref_hist[~ref_hist['home_club_goal'].str.contains('aet')]
+            ref_hist.sort_values(by='Date', ascending=False, inplace=True)
+            ref_hist.reset_index(inplace=True)
+            
+            dict_of_pattern = {}
+            list_of_pattern = []
+            try:
+                patterns = ref_hist_analysis(ref_hist)
+                list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
+            except Exception as e:
+                refexcept_messgs[f"ref_hist_analysis: {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
+                list_of_pattern = list_of_pattern + []
+            try:
+                patterns = ref_hist_analysis(ref_hist, skip=True)
+                list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
+            except Exception as e:
+                refexcept_messgs[f"ref_hist_analysis (skip): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
+                list_of_pattern = list_of_pattern + []
+            
+            for i in range(len(list_of_pattern)):
+                dict_of_pattern[str(i)] = list_of_pattern[i]
 
-        dict_of_patterns['ref_patterns'].append(json.dumps(dict_of_pattern))
+            dict_of_patterns['ref_patterns'].append(json.dumps(dict_of_pattern))
+        else:
+            dict_of_patterns['ref_patterns'].append(json.dumps({}))
     return dict_of_patterns
 
 
