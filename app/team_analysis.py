@@ -603,7 +603,7 @@ def matchscore_total_analysis(dataset, leagues_abbrv):
                 except_messgs[f"indiv_team_analysis (skip): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
                 list_of_pattern = list_of_pattern + []
             try:
-                patterns = indiv_team_analysis(row[number], row[diction[str(number)][0]], by_league=[row[6],leagues_abbrv[row[6]]])
+                patterns = indiv_team_analysis(row[number], row[diction[str(number)][0]], diction[str(number)][1], by_league=[row[6],leagues_abbrv[row[6]]])
                 list_of_pattern = list_of_pattern + [pattern for pattern in patterns]
             except Exception as e:
                 except_messgs[f"indiv_team_analysis (by league): {str(i)}"] = f"{type(e).__name__}: {e}" #Catches and Records Error
