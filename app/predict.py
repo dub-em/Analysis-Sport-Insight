@@ -15,7 +15,7 @@ def main():
     tomorrow = date.today() + timedelta(days=1)
     print(today, tomorrow)
 
-    if (today.day % 2) == 1:
+    if (today.day % 2) == 0:
         team_analysis_flow(today, tomorrow)
         ref_analysis_flow(today, tomorrow)
 
@@ -63,7 +63,6 @@ def main():
 
 
 if __name__ == '__main__':
-    #main()
     dyno_type = os.environ.get("DYNO")
     print(dyno_type)
     if ('run' in dyno_type) | ('scheduler' in dyno_type):
