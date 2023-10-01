@@ -435,7 +435,7 @@ def windrawloss_analysis(team_matches, team_name, role, skip=False):
             final_output.append(final_string)
         else:
             elements_counts = Counter(individ_scores)
-            final_string = end_string + '{}, {} - {}'.format('win/loss', elements_counts.most_common()[0][0], elements_counts.most_common()[0][0])
+            final_string = end_string + '{}, {} - {}'.format('win/loss', elements_counts.most_common()[0][0], elements_counts.most_common()[1][0])
             final_output.append(final_string)
     return final_output
 
