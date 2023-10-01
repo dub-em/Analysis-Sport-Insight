@@ -400,7 +400,7 @@ def windrawloss_analysis(team_matches, team_name, role, skip=False):
         scores.append(temp_scorelist)
         
     individ_scores = []
-    for score in scores:
+    for score in scores[:-1]:
         for individ_score in score:
             individ_scores.append(individ_score)
         
@@ -431,11 +431,11 @@ def windrawloss_analysis(team_matches, team_name, role, skip=False):
         prediction = [outcome for outcome in possible_outcomes if outcome not in outcomes]
         if prediction[0] == 'draw':
             elements_counts = Counter(individ_scores)
-            final_string = end_string + '{}, {} - {}'.format(prediction[0], list(elements_counts.keys())[0], list(elements_counts.keys())[0])
+            final_string = end_string + '{}, {} - {}'.format(prediction[0], elements_counts.most_common()[0][0], elements_counts.most_common()[0][0])
             final_output.append(final_string)
         else:
             elements_counts = Counter(individ_scores)
-            final_string = end_string + '{}, {} - {}'.format('win/loss', list(elements_counts.keys())[0], list(elements_counts.keys())[1])
+            final_string = end_string + '{}, {} - {}'.format('win/loss', elements_counts.most_common()[0][0], elements_counts.most_common()[0][0])
             final_output.append(final_string)
     return final_output
 
